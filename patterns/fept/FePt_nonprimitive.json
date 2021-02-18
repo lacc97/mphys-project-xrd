@@ -1,0 +1,52 @@
+{
+  "computational_environment": {
+    "angle_interval": [5, 80],
+    "angle_samples": 10000,
+    "mosaic_samples": 1000
+  },
+  "physical_environment": {
+    "wavelength": 1.5406,
+    "temperature": 300
+  },
+  "crystal": {
+    "lattice": {
+        "type": "fcc_tetragonal",
+        "a": 3.842,
+        "c": 3.702
+    },
+    "basis": [
+      {
+        "form": 26,
+        "mass": 55.84,
+        "position": [0, 0, 0]
+      },
+      {
+        "form": 78,
+        "mass": 195.08,
+        "position": [0.5, 0.5, 0.5]
+      }
+    ],
+    "debye_temperature": 230,
+    "crystallite_size": [40, 40, 40],
+    "mosaic_spread": 1
+  },
+  "patterns": [
+    {
+      "plane": [0,0,1],
+      "multiplicity": 1
+    },
+    {
+      "plane": [1,0,0],
+      "multiplicity": 1
+    },
+    {
+      "plane": [1,1,0],
+      "multiplicity": 1
+    },
+    {
+      "plane": [1,1,1],
+      "multiplicity": 1
+    }
+  ],
+  "output_path": "fept/xrd_full_pattern"
+}
