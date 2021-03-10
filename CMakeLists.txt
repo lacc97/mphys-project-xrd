@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD 20)
 find_package(cppcoro REQUIRED)
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(fmt REQUIRED)
-find_package(nlohmann_json REQUIRED)
 find_package(OpenMP REQUIRED COMPONENTS CXX)
 find_package(range-v3 REQUIRED)
 
@@ -35,3 +34,5 @@ add_library(xrd_utils STATIC)
         OpenMP::OpenMP_CXX)
 
 add_subdirectory(xrd_simulation)
+
+add_subdirectory(libs)
