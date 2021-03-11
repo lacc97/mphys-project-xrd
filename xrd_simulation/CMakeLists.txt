@@ -2,7 +2,8 @@ add_library(xrd STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/basis.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/crystal.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/diffraction.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/lattice.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/lattice.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/tables/form_factor.cpp)
 set_target_properties(xrd PROPERTIES
     CXX_VISIBILITY_PRESET "hidden")
 target_link_libraries(xrd
@@ -43,3 +44,11 @@ add_executable(xrd_peaks
   target_link_libraries(xrd_peaks
       PRIVATE
         xrd_utils)
+
+add_executable(xrd_ff
+    ${CMAKE_CURRENT_SOURCE_DIR}/main_ff.cpp)
+  set_target_properties(xrd_ff PROPERTIES
+      CXX_VISIBILITY_PRESET "hidden")
+  target_link_libraries(xrd_ff
+      PRIVATE
+        xrd)

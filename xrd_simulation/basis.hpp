@@ -14,7 +14,8 @@ namespace xrd {
   class basis {
    public:
     struct atom {
-      real_t f, m;
+      uint_t f;
+      real_t m;
       rvec3_t r;
     };
 

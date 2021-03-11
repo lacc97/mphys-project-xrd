@@ -16,7 +16,7 @@ namespace xrd {
     }
 
     inline static lattice fcc(const real_t a) noexcept {
-      return {a * rvec3_t{1, 1, 0}.normalized(), a * rvec3_t{0, 1, 1}.normalized(), a * rvec3_t{1, 0, 1}.normalized()};
+      return fcc_tetragonal(a, a);
     }
 
     inline static lattice fcc_tetragonal(const real_t a, const real_t c) noexcept {

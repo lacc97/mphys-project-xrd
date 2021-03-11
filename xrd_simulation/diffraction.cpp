@@ -1,5 +1,7 @@
 #include "diffraction.hpp"
 
+#include <gslpp/spline.hpp>
+
 #include <constants.hpp>
 #include <math.hpp>
 
@@ -35,7 +37,7 @@ void xrd::single_plane_diffraction_pattern::generate(const rdata_t& angles, rdat
 
       const real_t factors = f_lorentz * f_polarization * f_geometry * f_temperature;
 
-      intensity += std::norm(m_Crystal.structure_factor(delta_k)) * factors;
+      intensity += math::squared_norm(m_Crystal.structure_factor(delta_k)) * factors;
     }
     return intensity / delta_k_vectors.cols();
   };

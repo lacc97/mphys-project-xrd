@@ -9,6 +9,7 @@
 #include <Eigen/Dense>
 
 #include "allocator.hpp"
+#include "complex.hpp"
 
 #ifndef WITH_LOW_PRECISION
 //#  ifdef VERY_HIGH_PRECISION
@@ -31,7 +32,8 @@ typedef uint64_t uint_t;
 typedef double real_t;
 #endif
 
-typedef std::complex<real_t> cplx_t;
+typedef math::complex cplx_t;
+constexpr auto k_i = cplx_t{0, 1};
 
 constexpr auto n_dynamic = Eigen::Dynamic;
 

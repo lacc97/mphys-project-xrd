@@ -5,11 +5,21 @@
 
 #include <fmt/format.h>
 
+#include <gsl/gsl_math.h>
+
 #include "constants.hpp"
 #include "data/dataset_2d.hpp"
 #include "types.hpp"
 
 namespace math {
+  template <typename T>
+  concept number_type = requires (T a, T b) {
+    {a + b} -> std::same_as<T>;
+    {a - b} -> std::same_as<T>;
+    {a * b} -> std::same_as<T>;
+    {a / b} -> std::same_as<T>;
+  };
+
   namespace data {
     namespace details {
       void linspace(real_t start, real_t stop, std::span<real_t> out);
@@ -73,7 +83,36 @@ namespace math {
     return rad * real_t(180.0) / C_PI;
   }
 
-  inline constexpr real_t sqr(real_t r) noexcept {
+  inline constexpr cplx_t conj(cplx_t z) noexcept {
+    return z.conj();
+  }
+  inline constexpr real_t conj(real_t r) noexcept {
+    return r;
+  }
+
+  inline cplx_t exp(cplx_t z) noexcept {
+    return gsl_complex_exp(static_cast<gsl_complex>(z));
+  }
+  inline real_t exp(real_t r) noexcept {
+    return std::exp(r);
+  }
+
+  inline constexpr real_t norm(cplx_t z) noexcept {
+    return z.norm();
+  }
+  inline constexpr real_t norm(real_t r) noexcept {
+    return r;
+  }
+
+  inline constexpr real_t squared_norm(cplx_t z) noexcept {
+    return z.squared_norm();
+  }
+  inline constexpr real_t squared_norm(real_t r) noexcept {
+    return r*r;
+  }
+
+  template <number_type T>
+  inline constexpr T sqr(T r) noexcept {
     return r * r;
   }
 }    // namespace math

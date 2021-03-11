@@ -1,8 +1,12 @@
 #include "crystal.hpp"
 
+#include <array>
+
 #include <nlohmann/json.hpp>
 
 #include <math.hpp>
+
+#include "tables/form_factor.hpp"
 
 xrd::crystal nlohmann::adl_serializer<xrd::crystal>::from_json(const json& j) {
   if(j.contains("debye_temperature"))
@@ -33,14 +37,16 @@ cplx_t xrd::crystal::structure_factor(const rvec3_t& wavevector) const noexcept 
     cplx_t s;
   };
 
+  auto x = wavevector.norm()/(4*C_PI);
   auto [f, s] = std::transform_reduce(
     m_Basis.begin(), m_Basis.end(), structure{},
     [](const structure& p1, const structure& p2) -> structure {
       return {p1.f + p2.f, p1.s + p2.s};
     },
-    [this, &wavevector](const basis::atom& atom) -> structure {
+    [this, x, &wavevector](const basis::atom& atom) -> structure {
       const rvec3_t r = m_Lattice.r3_vector(atom.r);
-      return {math::sqr(atom.f), atom.f * std::exp<real_t>(-1i * wavevector.dot(r))};
+      const cplx_t f = tables::f0(atom.f, x);
+      return {math::squared_norm(f), f * math::exp(-k_i * wavevector.dot(r))};
     });
 
   return s / std::sqrt(f);
