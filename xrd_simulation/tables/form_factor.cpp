@@ -79,8 +79,9 @@ namespace {
      {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6.515, 0, 0,     0,      0,      0,      0,     0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,     0, 0,     0,      0,      0,      0,     0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 27.439, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,     0, 36.44, 36.862, 37.272, 37.673, 38.065}}};
+  constexpr size_t k_F0_element_count = std::tuple_size_v<std::tuple_element_t<0, decltype(k_F0)>> - 1;
 
-  const auto g_f0_splines = []() -> std::array<gsl::spline, 100> {
+  const auto g_f0_splines = []() -> std::array<gsl::spline, k_F0_element_count> {
     auto fn_column = [](size_t c) constexpr noexcept->std::array<double, k_F0.size()> {
       std::array<double, k_F0.size()> arr;
       for(size_t ii = 0; ii < arr.size(); ++ii)
@@ -90,12 +91,12 @@ namespace {
 
     auto x = fn_column(0);
 
-    return [x, &fn_column]<size_t... Is>(std::index_sequence<Is...>)->std::array<gsl::spline, sizeof...(Is)> {
+    return [&x, &fn_column]<size_t... Is>(std::index_sequence<Is...>)->std::array<gsl::spline, sizeof...(Is)> {
       return {{gsl::spline(gsl::interp_type::steffen, x, fn_column(Is + 1))...}};
     }
-    (std::make_index_sequence<std::tuple_size_v<decltype(k_F0)::value_type> - 1>());
+    (std::make_index_sequence<k_F0_element_count>());
   }();
-  thread_local auto g_f0_accels = std::array<gsl::interp_accel, 100>{};
+  thread_local auto g_f0_accels = std::array<gsl::interp_accel, k_F0_element_count>{};
 }    // namespace
 
 //#include <fmt/format.h>
