@@ -6,8 +6,11 @@
 #include <math.hpp>
 
 void xrd::single_plane_diffraction_pattern::generate(const rdata_t& angles, rdata_t& intensities) const {
-  rmatrix_t<3, Eigen::Dynamic> delta_k_vectors = generate_random_plane_vectors();
-  //    rmatrix_t<3, 1> delta_k_vectors = m_ReciprocalLattice.r3_vector(plane).normalized();
+  rmatrix_t<3, Eigen::Dynamic> delta_k_vectors;
+  if(m_MosaicSamples == 0 || m_MosaicSpread == 0)
+    delta_k_vectors = m_ReciprocalLattice.r3_vector(m_Plane).normalized();
+  else
+    delta_k_vectors = generate_random_plane_vectors();
   delta_k_vectors *= 2 * (2 * C_PI / m_XrayWavelength);
 
   real_t debye = m_Crystal.debye_temperature();
