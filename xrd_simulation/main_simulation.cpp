@@ -94,12 +94,11 @@ int main(int argc, char** argv) {
         xrd::single_plane_diffraction_pattern experiment(crystal, crystallite_size, mosaic_spread, mosaic_samples, plane, temperature, wavelength);
 
         rdata_t e_pat = experiment.generate(angles);
-        e_pat *= multiplicity;
-        xrd_pattern += e_pat;
         {
           ds::dataset_2d_view dset = ds::dataset_2d_view(angles, e_pat, ds::no_validation);
           fmt::print("  {0}: {{{1}}}\n", plane, fmt::join(dset.find_peaks(), ", "));
         }
+        xrd_pattern += multiplicity * e_pat;
       }
     }
   }
