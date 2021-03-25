@@ -52,6 +52,7 @@ int main(int argc, char** argv) {
 
   json config = io::load_json(argv[1]);
 
+  real_t global_factor;
   uint_t mosaic_samples;
   rdata_t angles;
   {
@@ -62,6 +63,8 @@ int main(int argc, char** argv) {
     angles = math::data::linspace(angle_interval[0], angle_interval[1], c_env.at("angle_samples").get<uint_t>());
 
     c_env.at("mosaic_samples").get_to(mosaic_samples);
+
+    global_factor = c_env.contains("global_factor") ? c_env.at("global_factor").get<real_t>() : 1;
   }
 
   real_t wavelength, temperature;
@@ -103,5 +106,6 @@ int main(int argc, char** argv) {
 
   std::string output_path = config.at("output_path").get<std::string>();
 
+  xrd_pattern *= global_factor;
   io::write_csv(fmt::format("{0}.csv", output_path), std::tie(angles, xrd_pattern));
 }
