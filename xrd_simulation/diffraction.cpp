@@ -24,7 +24,7 @@ void xrd::single_plane_diffraction_pattern::generate(const rdata_t& angles, rdat
       constexpr real_t C1 = 1.915045e3;    // h^2 / k_b considering units of length are angstroms, units of mass are daltons
 
       const real_t C2 = 1 + (x_2 / 36) - (x_2 * x_2 / 3600);    // Taylor expansion around 0 of [phi(x) + x/4]
-      return std::exp(-2 * ((3 * C1) / (2 * C_PI * C_PI * atom.m * x * debye)) * C2 * (2*C_PI/m_XrayWavelength) * sin_theta * sin_theta);
+      return std::exp(-2 * ((3 * C1) / (2 * C_PI * C_PI * atom.m * x * debye)) * C2 * 2 * C_PI * sin_theta * sin_theta / (m_XrayWavelength*m_XrayWavelength));
     };
 
     const real_t f_lorentz = 1 / (4 * sin_theta * sin_theta * cos_theta);
