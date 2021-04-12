@@ -10,9 +10,9 @@
 namespace xrd {
   class single_plane_diffraction_pattern {
    public:
-    single_plane_diffraction_pattern(xrd::crystal c, ivector_t<3> c_size, real_t m_spread, uint_t m_samples, rvec3_t plane, real_t temp, real_t wavelength)
+    single_plane_diffraction_pattern(xrd::crystal c, ivector_t<3> c_size, real_t m_spread, uint_t m_samples, rvec3_t plane, real_t temp, real_t wavelength, real_t rec_slit)
         : m_Crystal{std::move(c)}, m_ReciprocalLattice{m_Crystal.lattice().reciprocal()}, m_CrystalliteSize{std::move(c_size)}, m_MosaicSpread{m_spread},
-          m_MosaicSamples{m_samples}, m_Plane{std::move(plane)}, m_Temperature{temp}, m_XrayWavelength{wavelength} {}
+          m_MosaicSamples{m_samples}, m_Plane{std::move(plane)}, m_Temperature{temp}, m_XrayWavelength{wavelength}, m_ReceivingSollerSlitAngle{rec_slit} {}
 
     [[nodiscard]] inline rdata_t generate(const rdata_t& angles) const {
       rdata_t intensities(angles.size());
@@ -35,6 +35,7 @@ namespace xrd {
 
     real_t m_Temperature;
     real_t m_XrayWavelength;
+    real_t m_ReceivingSollerSlitAngle;
   };
 
   inline real_t scherrer_factor(const lattice& latt, const ivector_t<3>& sizes, const rvec3_t& wavevector) {
@@ -63,6 +64,8 @@ namespace xrd {
     real_t cos = std::cos(2 * angle);
     return (1 + cos * cos) / 2;
   }
+
+  real_t powder_grain_distribution_factor(real_t a, real_t sigma) noexcept;
 }    // namespace xrd
 
 #endif    //XRD_DIFFRACTION_HPP

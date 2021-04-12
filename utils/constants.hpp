@@ -11,6 +11,12 @@ constexpr real_t C_PI = M_PIl;
 constexpr real_t C_PI = 3.141592653589793238462643383279502884L;
 #endif
 
+#if defined(M_SQRT2l)
+constexpr real_t C_SQRT2 = M_SQRT2l;
+#else
+constexpr real_t C_SQRT2 = 1.414213562373095048801688724209698078L;
+#endif
+
 namespace SI {
   constexpr real_t C_EV = 1.60217662e-19L;
 

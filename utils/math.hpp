@@ -6,6 +6,7 @@
 #include <fmt/format.h>
 
 #include <gsl/gsl_math.h>
+#include <gsl/gsl_sf.h>
 
 #include "constants.hpp"
 #include "data/dataset_2d.hpp"
@@ -68,12 +69,12 @@ namespace math {
     real_t unit();
   }    // namespace rand
 
-  template <typename T>
-  inline constexpr std::enable_if_t<std::is_arithmetic_v<T>, int> signum(T x) noexcept {
-    if constexpr(std::is_signed<T>())
-      return (T(0) < x) - (x < T(0));
+  template <typename T> requires std::is_arithmetic_v<T>
+  inline constexpr int signum(T x) noexcept {
+    if constexpr(std::is_signed_v<T>)
+      return (T(0) < x ? 1 : 0) - (x < T(0) ? 1 : 0);
     else
-      return (T(0) < x);
+      return (T(0) < x ? 1 : 0);
   }
 
   inline constexpr real_t deg2rad(real_t deg) noexcept {
@@ -90,11 +91,22 @@ namespace math {
     return r;
   }
 
+  inline real_t erf(real_t r) noexcept {
+    return gsl_sf_erf(r);
+  }
+
   inline cplx_t exp(cplx_t z) noexcept {
     return gsl_complex_exp(static_cast<gsl_complex>(z));
   }
   inline real_t exp(real_t r) noexcept {
     return std::exp(r);
+  }
+  inline real_t expm1(real_t r) noexcept {
+    return std::expm1(r);
+  }
+  inline cplx_t expm1(cplx_t z) noexcept {
+    cplx_t t = gsl_complex_tanh(static_cast<gsl_complex>(z/2));
+    return 2*t/(1-t);
   }
 
   inline constexpr real_t norm(cplx_t z) noexcept {

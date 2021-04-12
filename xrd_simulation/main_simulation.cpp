@@ -67,12 +67,13 @@ int main(int argc, char** argv) {
     global_factor = c_env.contains("global_factor") ? c_env.at("global_factor").get<real_t>() : 1;
   }
 
-  real_t wavelength, temperature;
+  real_t wavelength, temperature, slit_angle;
   {
     const auto& p_env = config.at("physical_environment");
 
     p_env.at("wavelength").get_to(wavelength);
     p_env.at("temperature").get_to(temperature);
+    slit_angle = math::deg2rad(p_env.at("receiving_slit_angle").get<real_t>());
   }
 
   rdata_t xrd_pattern = rdata_t::Zero(angles.size());
@@ -91,7 +92,7 @@ int main(int argc, char** argv) {
       if(multiplicity != 0) {
         rvec3_t plane = p_config.at("plane").get<rvec3_t>();
 
-        xrd::single_plane_diffraction_pattern experiment(crystal, crystallite_size, mosaic_spread, mosaic_samples, plane, temperature, wavelength);
+        xrd::single_plane_diffraction_pattern experiment(crystal, crystallite_size, mosaic_spread, mosaic_samples, plane, temperature, wavelength, slit_angle);
 
         rdata_t e_pat = experiment.generate(angles);
         {
