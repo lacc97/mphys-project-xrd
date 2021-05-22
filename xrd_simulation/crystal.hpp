@@ -5,8 +5,12 @@
 
 #include <nlohmann/json_fwd.hpp>
 
+#include <math.hpp>
+
 #include "basis.hpp"
 #include "lattice.hpp"
+
+#include "tables/form_factor.hpp"
 
 namespace xrd {
   class crystal {
@@ -23,7 +27,33 @@ namespace xrd {
     [[nodiscard]] real_t number_density() const noexcept {
       return m_Basis.count() / m_Lattice.cell_volume();
     }
-    [[nodiscard]] cplx_t structure_factor(const rvec3_t& wavevector) const noexcept;
+    [[nodiscard]] inline cplx_t structure_factor(const rvec3_t& wavevector) const noexcept {
+      return structure_factor(wavevector, [](const basis::atom& atom) { return 1; });
+    }
+
+    template <typename F>
+    [[nodiscard]] cplx_t structure_factor(const rvec3_t& wavevector, F&& ff_mod) const noexcept {
+      using namespace std::complex_literals;
+
+      struct structure {
+        real_t f;
+        cplx_t s;
+      };
+
+      auto x = wavevector.norm()/(4*C_PI);
+      auto [f, s] = std::transform_reduce(
+        m_Basis.begin(), m_Basis.end(), structure{},
+        [](const structure& p1, const structure& p2) -> structure {
+          return {p1.f + p2.f, p1.s + p2.s};
+        },
+        [this, x, &wavevector, &ff_mod](const basis::atom& atom) -> structure {
+          const rvec3_t r = m_Lattice.r3_vector(atom.r);
+          const cplx_t f = tables::f0(atom.f, x) * ff_mod(atom);
+          return {math::squared_norm(f), f * math::exp(-k_i * wavevector.dot(r))};
+        });
+
+      return s / std::sqrt(f);
+    }
 
     [[nodiscard]] inline const xrd::basis& basis() const noexcept {
       return m_Basis;
