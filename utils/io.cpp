@@ -1,5 +1,6 @@
 #include "io.hpp"
 
+#include <algorithm>
 #include <charconv>
 #include <fstream>
 
@@ -8,6 +9,24 @@
 #include <nlohmann/json.hpp>
 
 #include "string.hpp"
+
+void io::detail::write_csv(std::string_view file, std::span<const std::span<const real_t>> datasets, std::string_view sep) {
+  const auto size = datasets[0].size();
+  for(auto s : datasets) {
+    if(s.size() != size)
+      throw std::runtime_error{"wrong shape"};
+  }
+
+  auto* f = fopen(std::string{file}.c_str(), "w");
+  auto row = std::vector<real_t>(datasets.size());
+  for(size_t ii = 0; ii < size; ++ii) {
+    std::transform(datasets.begin(), datasets.end(), row.begin(), [ii](auto s) {
+      return s[ii];
+    });
+    fmt::print(f, "{0}\n", fmt::join(row, sep));
+  }
+  fclose(f);
+}
 
 std::pair<stl::vector<real_t>, stl::vector<real_t>> io::load_csv(std::string_view file) {
   std::pair<stl::vector<real_t>, stl::vector<real_t>> data;

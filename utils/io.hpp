@@ -6,9 +6,14 @@
 #include <nlohmann/json_fwd.hpp>
 
 #include "data/dataset_2d.hpp"
+#include "templates/array.hpp"
 #include "types.hpp"
 
 namespace io {
+  namespace detail {
+    void write_csv(std::string_view file, std::span<const std::span<const real_t>> datasets, std::string_view sep = " ");
+  }
+
   std::pair<stl::vector<real_t>, stl::vector<real_t>> load_csv(std::string_view file);
 
   void write_csv(std::string_view file, std::tuple<std::span<const real_t>, std::span<const real_t>> data, std::string_view sep = " ");
@@ -18,6 +23,11 @@ namespace io {
   }
   inline void write_csv(std::string_view file, ds::dataset_2d_view data, std::string_view sep = " ") {
     return write_csv(file, std::make_tuple<std::span<const real_t>, std::span<const real_t>>(data.x(), data.y()), sep);
+  }
+
+  template <typename... Args>
+  void write_csv(std::string_view file, Args&&... args) {
+    detail::write_csv(file, utils::make_array_of<std::span<const real_t>>(std::forward<Args>(args)...));
   }
 
 

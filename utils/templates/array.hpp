@@ -16,6 +16,11 @@ namespace utils {
   constexpr std::array<T, N> make_array(Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>) {
     return details::make_array<T>(std::make_index_sequence<N>(), std::forward<Args>(args)...);
   }
+
+  template <typename T, typename... Args>
+  constexpr std::array<T, sizeof...(Args)> make_array_of(Args&&... args) noexcept((std::is_nothrow_constructible_v<T, Args> && ...)) {
+    return {{T(std::forward<Args>(args))...}};
+  }
 }
 
 #endif    //XRD_ARRAY_HPP
