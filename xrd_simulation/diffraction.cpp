@@ -34,17 +34,15 @@ void xrd::single_plane_diffraction_pattern::generate(const rdata_t& angles, rdat
     const real_t f_lorentz = 2*powder_grain_distribution_factor(std::asin(tan_s2/sin_2theta), m_MosaicSpread)/sin_2theta;
     const real_t f_polarization = (1 + cos_2theta * cos_2theta) / 2;
 
-    const real_t f_temperature = std::transform_reduce(m_Crystal.basis().begin(), m_Crystal.basis().end(), (real_t) 1, std::multiplies<>(), fn_debye_waller);
-
     real_t intensity = 0;
     for(sint_t ii = 0; ii < delta_k_vectors.cols(); ++ii) {
       const rvec3_t delta_k = delta_k_vectors.col(ii) * sin_theta;
 
       const real_t f_geometry = xrd::scherrer_factor(m_Crystal.lattice(), m_CrystalliteSize, delta_k);
 
-      const real_t factors = f_lorentz * f_polarization * f_geometry * f_temperature;
+      const real_t factors = f_lorentz * f_polarization * f_geometry;
 
-      intensity += math::squared_norm(m_Crystal.structure_factor(delta_k)) * factors;
+      intensity += math::squared_norm(m_Crystal.structure_factor(delta_k, fn_debye_waller)) * factors;
     }
     return intensity / delta_k_vectors.cols();
   };
