@@ -31,7 +31,7 @@ namespace xrd {
 
 
     [[nodiscard]] real_t cell_volume() const noexcept {
-      return a().dot(b().cross(c()));
+      return std::abs(a().dot(b().cross(c())));
     }
 
     [[nodiscard]] inline rvec3_t r3_vector(const rvec3_t& r) const noexcept {
