@@ -32,12 +32,18 @@ namespace gsl::integration {
     }
 
     result qag_adaptive(function f, double a, double b, rule r, double epsabs, double epsrel, size_t limit);
+    result qagi_double(function f, double epsabs, double epsrel, size_t limit);
   }    // namespace detail
 
 
   template <typename F> requires function<F>
   inline result qag_adaptive(F&& f, double a, double b, rule r, double epsabs, double epsrel, size_t limit = 0) {
     return detail::qag_adaptive(detail::to_function(std::forward<F>(f)), a, b, r, epsabs, epsrel, limit);
+  }
+
+  template <typename F> requires function<F>
+  inline result qagi_double(F&& f, double epsabs, double epsrel, size_t limit = 0) {
+    return detail::qagi_double(detail::to_function(std::forward<F>(f)), epsabs, epsrel, limit);
   }
 }    // namespace gsl::integration
 

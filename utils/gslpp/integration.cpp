@@ -72,3 +72,14 @@ gsl::integration::result gsl::integration::detail::qag_adaptive(gsl::integration
     throw std::system_error{status, error_category()};
   return res;
 }
+
+gsl::integration::result gsl::integration::detail::qagi_double(gsl::integration::detail::function f, double epsabs, double epsrel, size_t limit) {
+  gsl::integration::workspace workspace{limit == 0 ? 64 : limit};
+
+  gsl_function fun{f.function, const_cast<void*>(f.params)};
+
+  result res{};
+  if(auto status = gsl_integration_qagi(&fun, epsabs, epsrel, limit, workspace, &res.res, &res.abserr); status != 0)
+    throw std::system_error{status, error_category()};
+  return res;
+}
