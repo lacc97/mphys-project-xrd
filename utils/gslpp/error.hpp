@@ -51,6 +51,7 @@ namespace gsl {
 
   const details::gsl_category& error_category() noexcept;
 
+  std::error_code make_error_code(ec e) noexcept;
   std::error_condition make_error_condition(ec e) noexcept;
 }    // namespace gsl
 

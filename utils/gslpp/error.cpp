@@ -15,6 +15,10 @@ const gsl::details::gsl_category& gsl::error_category() noexcept {
   return g_category;
 }
 
+std::error_code gsl::make_error_code(gsl::ec e) noexcept {
+  return std::error_code{static_cast<int>(e), error_category()};
+}
+
 std::error_condition gsl::make_error_condition(gsl::ec e) noexcept {
   return std::error_condition{static_cast<int>(e), error_category()};
 }
