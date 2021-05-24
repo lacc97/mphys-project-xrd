@@ -40,6 +40,8 @@ real_t xrd::single_plane_diffraction_pattern::calculate_intensity_internal(const
     return std::exp(-2 * ((3 * C1) / (2 * C_PI * C_PI * atom.m * w.x * debye)) * w.c2 * 2 * C_PI * sin_theta * sin_theta / (m_XrayWavelength * m_XrayWavelength));
   };
 
+  const real_t f_abs = (1-std::exp(-2*m_AbsorptionUT/sin_theta));
+
   const real_t f_lorentz = 1 / (2 * sin_theta * sin_2theta);
   const real_t f_polarization = (1 + cos_2theta * cos_2theta) / 2;
 
@@ -49,7 +51,7 @@ real_t xrd::single_plane_diffraction_pattern::calculate_intensity_internal(const
 
     const real_t f_geometry = xrd::scherrer_factor(m_Crystal.lattice(), m_CrystalliteSize, delta_k);
 
-    const real_t factors = f_lorentz * f_polarization * f_geometry;
+    const real_t factors = f_lorentz * f_polarization * f_geometry * f_abs;
 
     intensity += math::squared_norm(m_Crystal.structure_factor(delta_k, fn_debye_waller)) * factors;
   }
