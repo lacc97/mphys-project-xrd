@@ -20,9 +20,15 @@ namespace xrd {
       return intensities;
     }
     void generate(const rdata_t& angles, rdata_t& intensities) const;
+    [[nodiscard]] rmatrix_t<3, n_dynamic> generate_random_scattering_vectors() const;
+
+    [[nodiscard]] real_t calculate_intensity_with_mosaic(rmatrix_t<3, n_dynamic> mosaic_planes, real_t angle) const;
 
    private:
-    [[nodiscard]] rmatrix_t<3, n_dynamic> generate_random_plane_vectors() const;
+    struct workspace;
+    [[nodiscard]] real_t calculate_intensity_internal(const workspace& w, real_t theta) const;
+
+
 
 
     xrd::crystal m_Crystal;
