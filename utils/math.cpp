@@ -14,6 +14,23 @@ void math::data::details::linspace(real_t start, real_t stop, std::span<real_t> 
   out.back() = stop;
 }
 
+void math::data::details::logspace(real_t start, real_t stop, std::span<real_t> out) {
+  if(out.size() <= 1)
+    throw std::invalid_argument(fmt::format("invalid count ({}): must be at least 2", out.size()));
+  if(stop <= start)
+    throw std::invalid_argument(fmt::format("invalid endpoints: start ({}) must be smaller than stop ({})", start, stop));
+  if(start <= 0)
+    throw std::invalid_argument(fmt::format("invalid endpoint: start({}) must be positive", start));
+
+  const real_t log_start = std::log(start);
+
+  const real_t h = std::log(stop/start)/static_cast<real_t>(out.size() - 1);
+#pragma omp parallel for
+  for(size_t ii = 0; ii < out.size() - 1; ++ii)
+    out[ii] = std::exp(log_start + ii * h);
+  out.back() = stop;
+}
+
 thread_local std::mt19937_64 math::rand::tl_Generator{std::random_device{}()};
 
 real_t math::rand::unit() {

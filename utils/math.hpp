@@ -5,7 +5,10 @@
 
 #include <fmt/format.h>
 
+#include <gslpp/integration.hpp>
+
 #include <gsl/gsl_math.h>
+#include <gsl/gsl_randist.h>
 #include <gsl/gsl_sf.h>
 
 #include "constants.hpp"
@@ -24,6 +27,7 @@ namespace math {
   namespace data {
     namespace details {
       void linspace(real_t start, real_t stop, std::span<real_t> out);
+      void logspace(real_t start, real_t stop, std::span<real_t> out);
 
       template <typename F>
       void table(real_t start, real_t stop, std::span<real_t> x, std::span<real_t> y, F&& f) {
@@ -51,6 +55,12 @@ namespace math {
       return space;
     }
 
+    inline rdata_t logspace(real_t start, real_t stop, uint_t count) {
+      rdata_t space(count);
+      details::logspace(start, stop, space);
+      return space;
+    }
+
     template <typename F>
     ds::dataset_2d table(real_t start, real_t stop, uint_t count, F&& f) {
       stl::vector<real_t> x(count), y(count);
@@ -68,6 +78,14 @@ namespace math {
 
     real_t unit();
   }    // namespace rand
+
+  namespace stats {
+    inline real_t voigt(real_t x, real_t sigma, real_t gamma) noexcept {
+      return gsl::integration::qagi_double([x, sigma, gamma](double xp) -> double {
+        return gsl_ran_gaussian_pdf(xp, sigma)*gsl_ran_cauchy_pdf(x - xp, gamma);
+      }, 0, 1e-5);
+    }
+  }
 
   template <typename T> requires std::is_arithmetic_v<T>
   inline constexpr int signum(T x) noexcept {
