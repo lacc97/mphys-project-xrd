@@ -29,24 +29,35 @@ struct fmt::formatter<ds::dataset_2d_view::point> {
   }
 };
 
-/* length:      angstrom
- * temperature: Kelvin */
-
 namespace {
-  namespace xray {
-    namespace CuKalpha {
-      constexpr real_t lambda = 1.5406;
-    }
-  }    // namespace xray
+  real_t background_profile(real_t theta_deg) noexcept {
+    constexpr real_t A = 307.369;
+    constexpr real_t Lambda = 0.0400355;
+    constexpr real_t Sigma = 0.0281618;
+    constexpr real_t C = 16.4488;
 
-  namespace crystals {
-    const xrd::crystal k_KBr{xrd::lattice::fcc(4.740), xrd::basis{{18, 39.098, {0, 0, 0}}, {36, 79.904, {0.5, 0.5, 0.5}}}, 172};
+    constexpr real_t a_1 = 282640;
+    constexpr real_t mu_1 = 42.9251;
+    constexpr real_t sigma_1 = 0.0119425;
+    constexpr real_t gamma_1 = 0.00534363;
 
-    const xrd::crystal k_KCl{xrd::lattice::fcc(4.514), xrd::basis{{18, 39.098, {0, 0, 0}}, {18, 35.450, {0.5, 0.5, 0.5}}}, 255};
-  }    // namespace crystals
+    constexpr real_t a_2 = 83695.3;
+    constexpr real_t mu_2 = 94.0501;
+    constexpr real_t sigma_2 = 0.0104494;
+    constexpr real_t gamma_2 = 0.0208413;
+
+    const real_t x = math::deg2rad(theta_deg);
+    const real_t bg_lin = A*std::exp(-Lambda*x - (Sigma*x)*(Sigma*x)) + C;
+    const real_t bg_1 = a_1*math::stats::voigt(x - mu_1, sigma_1, gamma_1);
+    const real_t bg_2 = a_2*math::stats::voigt(x - mu_2, sigma_2, gamma_2);
+
+    const real_t bg = bg_lin + bg_1 + bg_2;
+    return bg;
+  }
 }    // namespace
 
 int main(int argc, char** argv) {
+#if 1
   if(argc != 2)
     throw std::runtime_error("need to provide .json file as first argument");
 
@@ -55,6 +66,7 @@ int main(int argc, char** argv) {
   real_t global_factor;
   uint_t mosaic_samples;
   rdata_t angles;
+  bool with_bg;
   {
     const auto& c_env = config.at("computational_environment");
 
@@ -65,6 +77,8 @@ int main(int argc, char** argv) {
     c_env.at("mosaic_samples").get_to(mosaic_samples);
 
     global_factor = c_env.contains("global_factor") ? c_env.at("global_factor").get<real_t>() : 1;
+
+    with_bg = c_env.contains("with_bg") ? c_env.at("with_bg").get<bool>() : false;
   }
 
   real_t wavelength, temperature, slit_angle;
@@ -97,7 +111,7 @@ int main(int argc, char** argv) {
         rdata_t e_pat = experiment.generate(angles);
         {
           ds::dataset_2d_view dset = ds::dataset_2d_view(angles, e_pat, ds::no_validation);
-          fmt::print("  {0}: {{{1}}}\n", plane, fmt::join(dset.find_peaks(), ", "));
+          fmt::print("  {0}: {{{1}}}\n", plane, fmt::join(dset.find_peaks(0.1), ", "));
         }
         xrd_pattern += multiplicity * e_pat;
       }
@@ -106,6 +120,14 @@ int main(int argc, char** argv) {
 
   std::string output_path = config.at("output_path").get<std::string>();
 
-  xrd_pattern *= global_factor;
+  if(with_bg)
+    xrd_pattern = (global_factor*xrd_pattern) + angles.unaryExpr(&background_profile);
+  else
+    xrd_pattern *= global_factor;
   io::write_csv(fmt::format("{0}.csv", output_path), std::tie(angles, xrd_pattern));
+#else
+  ds::dataset_2d real_pattern(io::load_csv("fept/FePt_XRD.csv"));
+  rdata_t bg_removed = real_pattern.x().unaryExpr(&background_profile);
+  io::write_csv("fept/new_stuff/minus_bg.csv", real_pattern.x(), bg_removed);
+#endif
 }
