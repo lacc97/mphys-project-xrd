@@ -11,10 +11,19 @@ namespace {
     real_t d = gsl::integration::qag_adaptive([x](double e) -> double { return e / (std::exp(e) - 1); }, 0, x, gsl::integration::rule::e_Gauss_41, 0, 1e-5);
     return d / x;
   }
+
+  real_t temp_v2(real_t debye, real_t T) {
+    constexpr real_t C1 = 145.526; /*3*hb/k_b in K.Da.A^2 */
+
+    const real_t x = debye / T;
+    return C1 * ((temp_dimensionless_phi(x) / x) + 0.25) / debye;
+  }
 }    // namespace
 
 struct xrd::single_plane_diffraction_pattern::workspace {
-  explicit workspace(rmatrix_t<3, Eigen::Dynamic> mosaics, real_t s2, real_t x) : mosaic_planes{std::move(mosaics)}, tan_s2{std::tan(s2)}, x{x}, x_2{x}, phi_x{temp_dimensionless_phi(x)}, c2{phi_x+x/4} {}
+  explicit workspace(rmatrix_t<3, Eigen::Dynamic> mosaics, real_t s2, real_t debye, real_t T)
+      : mosaic_planes{std::move(mosaics)}, tan_s2{std::tan(s2)}, x{debye / T}, x_2{x}, phi_x{temp_dimensionless_phi(x)}, c2{phi_x + x / 4}, v2{temp_v2(debye,
+                                                                                                                                                       T)} {}
 
   const rmatrix_t<3, Eigen::Dynamic> mosaic_planes;
 
@@ -24,6 +33,8 @@ struct xrd::single_plane_diffraction_pattern::workspace {
   const real_t x_2;
   const real_t phi_x;
   const real_t c2;
+
+  const real_t v2;
 };
 
 real_t xrd::single_plane_diffraction_pattern::calculate_intensity_internal(const xrd::single_plane_diffraction_pattern::workspace& w, real_t theta) const {
@@ -33,14 +44,11 @@ real_t xrd::single_plane_diffraction_pattern::calculate_intensity_internal(const
   const real_t sin_2theta = 2 * sin_theta * cos_theta;
   const real_t cos_2theta = std::cos(2 * theta);
 
-  auto fn_debye_waller = [this, &w, debye = m_Crystal.debye_temperature(), sin_theta](const xrd::basis::atom& atom) noexcept -> real_t {
-    /* This is only correct for monatomic cubic crystals */
-    constexpr real_t C1 = 1.915045e3;    // h^2 / k_b considering units of length are angstroms, units of mass are daltons
-
-    return std::exp(-2 * ((3 * C1) / (2 * C_PI * C_PI * atom.m * w.x * debye)) * w.c2 * 2 * C_PI * sin_theta * sin_theta / (m_XrayWavelength * m_XrayWavelength));
+  auto fn_f = [this, &w, sin_theta](const xrd::basis::atom& a) -> real_t {
+    return math::exp(-8 * C_PI * C_PI * (w.v2 / a.m) * (sin_theta / m_XrayWavelength) * (sin_theta / m_XrayWavelength));
   };
 
-  const real_t f_abs = (1-std::exp(-2*m_AbsorptionUT/sin_theta));
+  const real_t f_abs = (1 - std::exp(-2 * m_AbsorptionUT / sin_theta));
 
   const real_t f_lorentz = 1 / (2 * sin_theta * sin_2theta);
   const real_t f_polarization = (1 + cos_2theta * cos_2theta) / 2;
@@ -53,20 +61,20 @@ real_t xrd::single_plane_diffraction_pattern::calculate_intensity_internal(const
 
     const real_t factors = f_lorentz * f_polarization * f_geometry * f_abs;
 
-    intensity += math::squared_norm(m_Crystal.structure_factor(delta_k, fn_debye_waller)) * factors;
+    intensity += math::squared_norm(m_Crystal.structure_factor(delta_k, fn_f)) * factors;
   }
   return intensity / w.mosaic_planes.cols();
 }
 
 real_t xrd::single_plane_diffraction_pattern::calculate_intensity_with_mosaic(rmatrix_t<3, n_dynamic> mosaic_planes, real_t theta) const {
-  workspace w{std::move(mosaic_planes), m_ReceivingSollerSlitAngle, m_Crystal.debye_temperature()/m_Temperature};
+  workspace w{std::move(mosaic_planes), m_ReceivingSollerSlitAngle, m_Crystal.debye_temperature(), m_Temperature};
   return calculate_intensity_internal(w, theta);
 }
 
 void xrd::single_plane_diffraction_pattern::generate(const rdata_t& angles, rdata_t& intensities) const {
   intensities.resize(angles.size());
 
-  workspace w{generate_random_scattering_vectors(), m_ReceivingSollerSlitAngle, m_Crystal.debye_temperature()/m_Temperature};
+  workspace w{generate_random_scattering_vectors(), m_ReceivingSollerSlitAngle, m_Crystal.debye_temperature(), m_Temperature};
 #pragma omp parallel for default(none) shared(w, angles, intensities)
   for(sint_t ii = 0; ii < intensities.size(); ++ii)
     intensities(ii) = calculate_intensity_internal(w, math::deg2rad(angles(ii)));
@@ -75,7 +83,7 @@ void xrd::single_plane_diffraction_pattern::generate(const rdata_t& angles, rdat
 rmatrix_t<3, n_dynamic> xrd::single_plane_diffraction_pattern::generate_random_scattering_vectors() const {
   real_t magnitude = (2 * (2 * C_PI / m_XrayWavelength));
   if(m_MosaicSamples == 0 || m_MosaicSpread == 0) {
-    return magnitude*m_ReciprocalLattice.r3_vector(m_Plane).normalized();
+    return magnitude * m_ReciprocalLattice.r3_vector(m_Plane).normalized();
   } else {
     rmatrix_t<3, n_dynamic> vectors(3, m_MosaicSamples);
 
@@ -97,7 +105,7 @@ rmatrix_t<3, n_dynamic> xrd::single_plane_diffraction_pattern::generate_random_s
       vectors.col(ii) = fn_rotate(phi, std::abs(theta));
     }
 
-    return magnitude*vectors;
+    return magnitude * vectors;
   }
 }
 

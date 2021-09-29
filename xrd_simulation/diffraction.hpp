@@ -29,8 +29,6 @@ namespace xrd {
     [[nodiscard]] real_t calculate_intensity_internal(const workspace& w, real_t theta) const;
 
 
-
-
     xrd::crystal m_Crystal;
     xrd::lattice m_ReciprocalLattice;
     ivector_t<3> m_CrystalliteSize;
@@ -42,6 +40,8 @@ namespace xrd {
     real_t m_Temperature;
     real_t m_XrayWavelength;
     real_t m_ReceivingSollerSlitAngle;
+
+    real_t m_AbsorptionUT = 0.0025;
   };
 
   inline real_t scherrer_factor(const lattice& latt, const ivector_t<3>& sizes, const rvec3_t& wavevector) {
